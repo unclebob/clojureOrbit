@@ -1,0 +1,14 @@
+Simple Orbital Simulator written in Clojure.
+Robert C. Martin
+2 Jun 2010
+
+Executing with the command: java -cp <CLJLIB>/clojure.jar:<CLJLIB>clojure-contrib.jar clojure.main src/orbit/run.clj
+where CLJLIB is the directory that holds the jar files for clojure.
+
+Commands:  
+  q Quit
+  + zoom in
+  - zoom out
+  <space>  Center the sun.
+
+
