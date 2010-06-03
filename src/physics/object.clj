@@ -44,18 +44,7 @@
   )
 
 (defn calculate-forces-on-all [os]
-  (loop [objects os ns []]
-    (if (empty? objects)
-      ns
-      (let [
-        o (first objects)
-        n (accumulate-forces o os)
-        ]
-        (recur (rest objects) (conj ns n))
-        )
-      )
-    )
-  )
+  (map #(accumulate-forces % os) os))
 
 (defn accelerate [o]
   (let [
@@ -69,13 +58,7 @@
   )
 
 (defn accelerate-all [os]
-  (loop [os os ns []]
-    (if (empty? os)
-      ns
-      (recur (rest os) (conj ns (accelerate (first os))))
-      )
-    )
-  )
+  (map accelerate os))
 
 (defn reposition [o]
   (let [
@@ -87,13 +70,7 @@
   )
 
 (defn reposition-all [os]
-  (loop [os os ns []]
-    (if (empty? os)
-      ns
-      (recur (rest os) (conj ns (reposition (first os))))
-      )
-    )
-  )
+  (map reposition os))
 
 (defn collided? [o1 o2]
   (let [

@@ -74,6 +74,21 @@
     )
   )
 
+(defn- quit-key? [c]
+  (= \q c)
+  )
+
+(defn- plus-key? [c]
+  (or (= \+ c) (= \= c))
+  )
+
+(defn- minus-key? [c]
+  (or (= \- c) (= \_ c))
+  )
+
+(defn- space-key? [c]
+  (= \space c)
+  )
 
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
@@ -90,10 +105,10 @@
         c (.getKeyChar e)
         ]
         (cond
-          (= \q c) (System/exit 1)
-          (or (= \+ c) (= \= c)) (magnify 1.1 controls world)
-          (or (= \- c) (= \_ c)) (magnify 0.9 controls world)
-          (= \space c) (magnify 1.0 controls world)
+          (quit-key? c) (System/exit 1)
+          (plus-key? c) (magnify 1.1 controls world)
+          (minus-key? c) (magnify 0.9 controls world)
+          (space-key? c) (magnify 1.0 controls world)
           )
         (.repaint this)
         )
@@ -114,7 +129,7 @@
     sp (:position sun)
     direction (vector/rotate90 (vector/unit (vector/subtract p sp)))
     ]
-    (vector/scale direction (+ (rand 0.1) 0.5))
+    (vector/scale direction (+ (rand 0.3) 0.3))
     )
   )
 
@@ -140,7 +155,7 @@
 (defn create-world []
   (let [
     v0 (vector/make)
-    sun (object/make center 20 (vector/make 0 0) v0 "sun")
+    sun (object/make center 30 (vector/make 0 0) v0 "sun")
     ]
     (loop [world [sun] n 300]
       (if (zero? n)
