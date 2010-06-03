@@ -5,6 +5,12 @@ Robert C. Martin
 Executing with the command: java -cp <CLJLIB>/clojure.jar:<CLJLIB>clojure-contrib.jar clojure.main src/orbit/run.clj
 where CLJLIB is the directory that holds the jar files for clojure.
 
+or, with leiningen:
+
+lein deps
+lein repl
+(load "orbit/run")
+
 Commands:  
   q Quit
   + zoom in
