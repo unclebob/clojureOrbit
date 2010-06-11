@@ -14,7 +14,7 @@
 (defstruct controls :magnification :center)
 
 (defn size-by-mass [{m :mass}]
-  (+ 3 m)
+  (+ 3 (Math/sqrt m))
   )
 
 (defn color-by-mass [{m :mass}]
@@ -127,15 +127,17 @@
 (defn random-velocity [p sun]
   (let [
     sp (:position sun)
+    sd (position/distance p sp)
+    v (Math/sqrt (/ 1 sd))
     direction (vector/rotate90 (vector/unit (vector/subtract p sp)))
     ]
-    (vector/scale direction (+ (rand 0.3) 0.3))
+    (vector/scale direction (+ (rand 0.01) (* v 13.5)))
     )
   )
 
 (defn random-position [sun-position]
   (let [
-    r (+ (rand 150) 80)
+    r (+ (rand 300) 30)
     theta (rand (* 2 Math/PI))
     ]
     (position/add sun-position (position/make (* r (Math/cos theta)) (* r (Math/sin theta))))
@@ -155,9 +157,9 @@
 (defn create-world []
   (let [
     v0 (vector/make)
-    sun (object/make center 30 (vector/make 0 0) v0 "sun")
+    sun (object/make center 150 (vector/make 0 0) v0 "sun")
     ]
-    (loop [world [sun] n 300]
+    (loop [world [sun] n 500]
       (if (zero? n)
         world
         (recur (conj world (random-object sun n)) (dec n))

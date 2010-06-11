@@ -127,7 +127,7 @@
         om (object/merge o1 o2)
         ]
         (is (= "o2.o1" (:name om)))
-        (is (= (position/make 1 1.5) (:position om)))
+        (is (= (position/make 1 1.4) (:position om)))
         (is (= 5 (:mass om)))
         (is (= (vector/make -1/5 0) (:velocity om)))
         (is (= (vector/make 2 2) (:force om)))

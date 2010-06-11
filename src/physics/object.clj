@@ -81,11 +81,23 @@
     )
   )
 
-(defn merge [
-  {n1 :name, p1 :position, m1 :mass, v1 :velocity f1 :force}
-  {n2 :name, p2 :position, m2 :mass, v2 :velocity f2 :force}]
+(defn center-of-mass [
+  {p1 :position, m1 :mass}
+  {p2 :position, m2 :mass}]
   (let [
-    p (position/average p1 p2)
+    s (/ m1 (+ m1 m2))
+    uv (vector/unit (vector/subtract p2 p1))
+    d (vector/scale uv s)
+    ]
+    (position/add p1 d)
+    )
+  )
+
+(defn merge [
+  {n1 :name, m1 :mass, v1 :velocity f1 :force, :as o1}
+  {n2 :name, m2 :mass, v2 :velocity f2 :force, :as o2}]
+  (let [
+    p (center-of-mass o1 o2)
     m (+ m1 m2)
     mv1 (vector/scale v1 m1)
     mv2 (vector/scale v2 m2)
