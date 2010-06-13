@@ -80,7 +80,6 @@
         ao (object/accelerate o)
         ]
         (is (vector-close-to (vector/make 1.5 1.5) (:velocity ao)))
-        (is (= (vector/make) (:force ao)))
         )
       )
 

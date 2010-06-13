@@ -53,7 +53,7 @@
     v (:velocity o)
     av (vector/add v (vector/scale f (/ 1.0 m)))
     ]
-    (-> o (assoc :velocity av) (assoc :force (vector/make)))
+    (assoc o :velocity av)
     )
   )
 

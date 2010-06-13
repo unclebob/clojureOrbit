@@ -11,7 +11,7 @@
 
 (def center (position/make 500 500))
 
-(defstruct controls :magnification :center)
+(defstruct controls :magnification :center :trails :clear)
 
 (defn size-by-mass [{m :mass}]
   (+ 3 (Math/sqrt m))
@@ -53,6 +53,7 @@
     (doseq [obj world]
       (draw-object g obj controls)
       )
+    (.clearRect g 0 0 1000 20)
     (.drawString g (str "Objects: " (count world)) 20 20)
     )
   )
@@ -70,9 +71,16 @@
       ]
       (alter controls #(assoc % :magnification new-mag))
       (alter controls #(assoc % :center sun-position))
+      (alter controls #(assoc % :clear true))
       )
     )
   )
+
+(defn reset-screen-state [controls]
+  (dosync (alter controls #(assoc % :clear false))))
+
+(defn toggle-trail [controls]
+  (dosync (alter controls #(assoc % :trails (not (:trails @controls))))))
 
 (defn- quit-key? [c]
   (= \q c)
@@ -90,11 +98,17 @@
   (= \space c)
   )
 
+(defn- trail-key? [c]
+  (= \t c)
+  )
+
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
-      (proxy-super paintComponent g)
+      (when (or (:clear @controls) (not (:trails @controls)))
+        (proxy-super paintComponent g))
       (draw-world g @world @controls)
+      (reset-screen-state controls)
       )
     (actionPerformed [e]
       (update-world world)
@@ -109,6 +123,7 @@
           (plus-key? c) (magnify 1.1 controls world)
           (minus-key? c) (magnify 0.9 controls world)
           (space-key? c) (magnify 1.0 controls world)
+          (trail-key? c) (toggle-trail controls)
           )
         (.repaint this)
         )
@@ -170,7 +185,7 @@
 
 (defn world-frame []
   (let [
-    controls (ref (struct controls 1 center))
+    controls (ref (struct controls 1 center false false))
     world (ref (create-world))
     frame (JFrame. "Orbit")
     panel (world-panel frame world controls)

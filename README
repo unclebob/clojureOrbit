@@ -19,6 +19,7 @@ Commands:
   q Quit
   + zoom in
   - zoom out
+  t toggle trails
   <space>  Center the sun.
 
 
