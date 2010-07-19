@@ -131,5 +131,10 @@
     )
   )
 
-(defn update-all [os]
-  (-> os collide-all calculate-forces-on-all accelerate-all reposition-all))
+(defn update-all
+  ([os]
+    (-> os collide-all calculate-forces-on-all accelerate-all reposition-all))
+
+  ([speed os]
+    (-> os collide-all calculate-forces-on-all accelerate-all reposition-all))
+  )

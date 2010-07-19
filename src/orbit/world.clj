@@ -11,7 +11,7 @@
 
 (def center (position/make 500 500))
 
-(defstruct controls :magnification :center :trails :clear)
+(defstruct controls :magnification :speed :center :trails :clear)
 
 (defn size-by-mass [{m :mass}]
   (+ 3 (Math/sqrt m))
@@ -54,13 +54,16 @@
       (draw-object g obj controls)
       )
     (.clearRect g 0 0 1000 20)
-    (.drawString g (str "Objects: " (count world)) 20 20)
+    (.drawString g (format "Objects: %d, Magnification: %4.3g, Speed: %d"
+      (count world)
+      (:magnification controls)
+      (:speed controls)) 20 20)
     )
   )
 
-(defn update-world [world]
+(defn update-world [world controls]
   (dosync
-    (alter world object/update-all))
+    (alter world #(object/update-all (:speed controls) %)))
   )
 
 (defn magnify [factor controls world]
@@ -82,6 +85,12 @@
 (defn toggle-trail [controls]
   (dosync (alter controls #(assoc % :trails (not (:trails @controls))))))
 
+(defn speed-up [controls]
+  (dosync (alter controls #(assoc % :speed (inc (:speed @controls))))))
+
+(defn slow-down [controls]
+  (dosync (alter controls #(assoc % :speed (max 1 (dec (:speed @controls)))))))
+
 (defn- quit-key? [c]
   (= \q c)
   )
@@ -102,6 +111,14 @@
   (= \t c)
   )
 
+(defn- speed-key? [c]
+  (= \> c)
+  )
+
+(defn- slow-key? [c]
+  (= \< c)
+  )
+
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
@@ -111,7 +128,7 @@
       (reset-screen-state controls)
       )
     (actionPerformed [e]
-      (update-world world)
+      (update-world world @controls)
       (.repaint this)
       )
     (keyPressed [e]
@@ -124,6 +141,8 @@
           (minus-key? c) (magnify 0.9 controls world)
           (space-key? c) (magnify 1.0 controls world)
           (trail-key? c) (toggle-trail controls)
+          (speed-key? c) (speed-up controls)
+          (slow-key? c) (slow-down controls)
           )
         (.repaint this)
         )
@@ -185,7 +204,12 @@
 
 (defn world-frame []
   (let [
-    controls (ref (struct controls 1 center false false))
+    controls (ref (struct-map controls
+      :magnification 1.0
+      :speed 1
+      :center center
+      :trails false
+      :clear false))
     world (ref (create-world))
     frame (JFrame. "Orbit")
     panel (world-panel frame world controls)
