@@ -176,10 +176,13 @@
 (defn create-world []
   (let [
     v0 (vector/make)
-    sun (object/make center 150 (vector/make 0 0) v0 "sun")
-    planet (object/make (position/make 600 600) 20 v0 v0 "planet")
+    v11 (vector/make 1 1)
+    v-1-1 (vector/make -1 -1)
+    sun (object/make center 150 v0 v0 "sun")
+    earth (object/make (position/make 600 600) 20 v11 v0 "Earth")
+    mars (object/make (position/make 400 400) 10 v-1-1 v0 "Mars")    
     ]
-    [sun planet]
+    [sun earth mars]
     )
   )
 

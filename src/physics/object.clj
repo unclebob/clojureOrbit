@@ -16,11 +16,13 @@
     (struct object position mass velocity force name))
   )
 
+;----  Random walk stuff.
 (defn random-step []
   (- (rand) 0.5))
 
 (defn random-vector []
   (vector/make (random-step) (random-step)))
+/--------
 
 (defn reposition [o]
   (let [
