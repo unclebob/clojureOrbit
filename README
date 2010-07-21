@@ -1,25 +1,11 @@
-Simple Orbital Simulator written in Clojure.
-Robert C. Martin
-2 Jun 2010
+There are 500 objects in "orbit" around the sun.  There's just one problem.  They don't orbit.  
+They just stream away from the sun at a constant velocity.
 
-To run:
-  java -jar clojureOrbit-standalone.jar
+This can be fun to watch, especially as the objects collide with each other in the first few 
+seconds of the simulation.  However, what we really want is for the objects to attract
+each other.  
 
-or to execute wihout the jar:
- java -cp <CLJLIB>/clojure.jar:<CLJLIB>clojure-contrib.jar clojure.main src/orbit/run.clj
-       where CLJLIB is the directory that holds the jar files for clojure.
-
-or, with leiningen:
-
-lein deps
-lein repl
-(load "orbit/run")
-
-Commands:  
-  q Quit
-  + zoom in
-  - zoom out
-  t toggle trails
-  <space>  Center the sun.
+Notice that there are some tests failing.  If you get these tests to pass, you will be close
+to implementing gravity...
 
 
