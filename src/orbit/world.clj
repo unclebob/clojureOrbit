@@ -11,18 +11,21 @@
 
 (def center (position/make 500 500))
 
-(defstruct controls :magnification :speed :center :trails :clear)
+(defstruct controls :magnification :center :trails :clear)
 
 (defn size-by-mass [{m :mass}]
-  (+ 3 (Math/sqrt m))
+  (+ 0 (Math/sqrt m))
   )
 
 (defn color-by-mass [{m :mass}]
-  (let [
-    blue (min 255 (int (* 20 m)))
-    red (min 100 (- 255 blue))
-    ]
-    (Color. red 128 blue)
+  (cond
+    (< m 1) Color/black
+    (< m 2) (Color. 210 105 30)
+    (< m 5) Color/red
+    (< m 10) (Color. 107 142 35)
+    (< m 20) Color/magenta
+    (< m 40) Color/blue
+    :else (Color. 255 215 0)
     )
   )
 
@@ -34,7 +37,7 @@
     y-offset (- (:y center) (* mag (:y sun-center)))
     x (+ x-offset (* mag (:x (:position obj))))
     y (+ y-offset (* mag (:y (:position obj))))
-    s (max 3 (* mag (size-by-mass obj)))
+    s (max 2 (* mag (size-by-mass obj)))
     half-s (/ s 2)
     c (color-by-mass obj)
     ]
@@ -54,16 +57,15 @@
       (draw-object g obj controls)
       )
     (.clearRect g 0 0 1000 20)
-    (.drawString g (format "Objects: %d, Magnification: %4.3g, Speed: %d"
+    (.drawString g (format "Objects: %d, Magnification: %4.3g"
       (count world)
-      (:magnification controls)
-      (:speed controls)) 20 20)
+      (:magnification controls)) 20 20)
     )
   )
 
 (defn update-world [world controls]
   (dosync
-    (alter world #(object/update-all (:speed controls) %)))
+    (alter world #(object/update-all %)))
   )
 
 (defn magnify [factor controls world]
@@ -85,12 +87,6 @@
 (defn toggle-trail [controls]
   (dosync (alter controls #(assoc % :trails (not (:trails @controls))))))
 
-(defn speed-up [controls]
-  (dosync (alter controls #(assoc % :speed (inc (:speed @controls))))))
-
-(defn slow-down [controls]
-  (dosync (alter controls #(assoc % :speed (max 1 (dec (:speed @controls)))))))
-
 (defn- quit-key? [c]
   (= \q c)
   )
@@ -111,13 +107,14 @@
   (= \t c)
   )
 
-(defn- speed-key? [c]
-  (= \> c)
-  )
-
-(defn- slow-key? [c]
-  (= \< c)
-  )
+(defn handle-key [c world controls]
+  (cond
+    (quit-key? c) (System/exit 1)
+    (plus-key? c) (magnify 1.1 controls world)
+    (minus-key? c) (magnify 0.9 controls world)
+    (space-key? c) (magnify 1.0 controls world)
+    (trail-key? c) (toggle-trail controls)
+    ))
 
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
@@ -132,20 +129,8 @@
       (.repaint this)
       )
     (keyPressed [e]
-      (let [
-        c (.getKeyChar e)
-        ]
-        (cond
-          (quit-key? c) (System/exit 1)
-          (plus-key? c) (magnify 1.1 controls world)
-          (minus-key? c) (magnify 0.9 controls world)
-          (space-key? c) (magnify 1.0 controls world)
-          (trail-key? c) (toggle-trail controls)
-          (speed-key? c) (speed-up controls)
-          (slow-key? c) (slow-down controls)
-          )
-        (.repaint this)
-        )
+      (handle-key (.getKeyChar e) world controls)
+      (.repaint this)
       )
     (getPreferredSize []
       (Dimension. 1000 1000)
@@ -206,7 +191,6 @@
   (let [
     controls (ref (struct-map controls
       :magnification 1.0
-      :speed 1
       :center center
       :trails false
       :clear false))
