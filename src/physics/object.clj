@@ -16,35 +16,8 @@
     (struct object position mass velocity force name))
   )
 
-(defn gravity [m1 m2 r]
-  (/ (* m1 m2) (* r r)))
-
-(defn force-between [o1 o2]
-  (let [
-    p1 (:position o1)
-    p2 (:position o2)
-    d (position/distance p1 p2)
-    uv (vector/unit (vector/subtract p2 p1))
-    g (gravity (:mass o1) (:mass o2) d)
-    ]
-    (vector/scale uv g))
-  )
-
-(defn accumulate-forces
-  ([o os]
-    (assoc o :force (accumulate-forces o os (vector/make))))
-
-  ([o os f]
-    (cond
-      (empty? os) f
-      (= o (first os)) (recur o (rest os) f)
-      :else (recur o (rest os) (vector/add f (force-between o (first os))))
-      )
-    )
-  )
-
 (defn calculate-forces-on-all [os]
-  (map #(accumulate-forces % os) os))
+  os)
 
 (defn accelerate [o]
   (let [
