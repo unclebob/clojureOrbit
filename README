@@ -1,25 +1,7 @@
-Simple Orbital Simulator written in Clojure.
-Robert C. Martin
-2 Jun 2010
+There's not much code here.  Just some stubs.  The tests for the vector module
+are all present, and if you run them they will fail horribly.
 
-To run:
-  java -jar clojureOrbit-standalone.jar
+Your task is to get these tests to pass by implementing the specified functions.
 
-or to execute wihout the jar:
- java -cp <CLJLIB>/clojure.jar:<CLJLIB>clojure-contrib.jar clojure.main src/orbit/run.clj
-       where CLJLIB is the directory that holds the jar files for clojure.
-
-or, with leiningen:
-
-lein deps
-lein repl
-(load "orbit/run")
-
-Commands:  
-  q Quit
-  + zoom in
-  - zoom out
-  t toggle trails
-  <space>  Center the sun.
-
-
+Oh, and don't bother to run the simulation.  In this primitive example,
+there isn't one.
