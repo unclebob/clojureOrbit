@@ -177,13 +177,9 @@
   (let [
     v0 (vector/make)
     sun (object/make center 150 (vector/make 0 0) v0 "sun")
+    planet (object/make (position/make 600 600) 20 v0 v0 "planet")
     ]
-    (loop [world [sun] n 500]
-      (if (zero? n)
-        world
-        (recur (conj world (random-object sun n)) (dec n))
-        )
-      )
+    [sun planet]
     )
   )
 
