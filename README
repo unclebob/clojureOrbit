@@ -1,25 +1,10 @@
-Simple Orbital Simulator written in Clojure.
-Robert C. Martin
-2 Jun 2010
+When you run this version you will see the Sun, Earth, and Mars
+wiggling around randomly.  That's because the code that 
+repositions the object based on their velocity
+has been stubbed to simply impleent a random walk.  
 
-To run:
-  java -jar clojureOrbit-standalone.jar
-
-or to execute wihout the jar:
- java -cp <CLJLIB>/clojure.jar:<CLJLIB>clojure-contrib.jar clojure.main src/orbit/run.clj
-       where CLJLIB is the directory that holds the jar files for clojure.
-
-or, with leiningen:
-
-lein deps
-lein repl
-(load "orbit/run")
-
-Commands:  
-  q Quit
-  + zoom in
-  - zoom out
-  t toggle trails
-  <space>  Center the sun.
+If you run the tests you'll see that a critical test fails.  If
+you get that test to run, you will likely find that the objects
+orbit the sun as they should.
 
 
