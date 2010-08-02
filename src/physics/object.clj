@@ -22,7 +22,7 @@
 
 (defn random-vector []
   (vector/make (random-step) (random-step)))
-/--------
+;--------
 
 (defn reposition [o]
   (let [
