@@ -1,7 +1,6 @@
-(ns physics (:use clojure.test))
-(require 'physics.physics)
-(use 'physics.test-utilities)
-
+(ns physics 
+  (:require physics.physics)
+  (:use clojure.test physics.test-utilities))
 
 (deftest vector-test
   (testing "vector creation"
