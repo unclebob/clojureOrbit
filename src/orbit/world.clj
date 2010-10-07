@@ -17,14 +17,14 @@
   (+ 0 (Math/sqrt m)))
 
 (defn color-by-mass [{m :mass}]
-  (cond
-    (< m 1) Color/black
-    (< m 2) (Color. 210 105 30)
-    (< m 5) Color/red
-    (< m 10) (Color. 107 142 35)
-    (< m 20) Color/magenta
-    (< m 40) Color/blue
-    :else (Color. 255 215 0)))
+  (condp > m
+    1  Color/black
+    2  (Color. 210 105 30)
+    5  Color/red
+    10 (Color. 107 142 35)
+    20 Color/magenta
+    40 Color/blue
+    (Color. 255 215 0)))
 
 (defn draw-object [g obj controls]
   (let [mag        (:magnification controls)
@@ -69,28 +69,13 @@
 (defn toggle-trail [controls]
   (dosync (alter controls #(assoc % :trails (not (:trails @controls))))))
 
-(defn- quit-key? [c]
-  (= \q c))
-
-(defn- plus-key? [c]
-  (or (= \+ c) (= \= c)))
-
-(defn- minus-key? [c]
-  (or (= \- c) (= \_ c)))
-
-(defn- space-key? [c]
-  (= \space c))
-
-(defn- trail-key? [c]
-  (= \t c))
-
 (defn handle-key [c world controls]
-  (cond
-    (quit-key? c) (System/exit 1)
-    (plus-key? c) (magnify 1.1 controls world)
-    (minus-key? c) (magnify 0.9 controls world)
-    (space-key? c) (magnify 1.0 controls world)
-    (trail-key? c) (toggle-trail controls)))
+  (condp = c
+    \q     (System/exit 1)
+    \+     (magnify 1.1 controls world)
+    \-     (magnify 0.9 controls world)
+    \space (magnify 1.0 controls world)
+    \t     (toggle-trail controls)))
 
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
