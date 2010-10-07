@@ -1,35 +1,26 @@
 (ns physics.position)
 
-(defstruct position :x :y)
-
 (defn origin? [p]
-  (and
-    (zero? (:x p))
-    (zero? (:y p))))
+  (every? zero? p))
 
 (defn make
-  ([]
-    (struct position 0 0))
-  ([x y]
-    (struct position x y)))
+  ([]    [0 0])
+  ([x y] [x y]))
 
-(defn add [p q]
-  (struct position
-    (+ (:x p) (:x q))
-    (+ (:y p) (:y q))))
+(defn add [[x1 y1] [x2 y2]]
+  [(+ x1 x2) (+ y1 y2)])
 
-(defn subtract [p q]
-  (struct position
-    (- (:x p) (:x q))
-    (- (:y p) (:y q))))
+(defn subtract [[x1 y1] [x2 y2]]
+  [(- x1 x2) (- y1 y2)])
 
-(defn distance [p q]
-  (letfn [(square [x] (* x x))]
-    (Math/sqrt
-      (+
-        (square (- (:x p) (:x q)))
-        (square (- (:y p) (:y q)))))))
+(defn distance [[x1 y1] [x2 y2]]
+  (Math/sqrt
+   (+
+    (Math/pow (- x1 x2) 2)
+    (Math/pow (- y1 y2) 2))))
 
-(defn average [{x1 :x y1 :y} {x2 :x y2 :y}]
-  (letfn [(mean [a b] (/ (+ a b) 2))]
-    (make (mean x1 x2) (mean y1 y2))))
+(defn mean [a b]
+  (/ (+ a b) 2))
+
+(defn average [[x1 y1] [x2 y2]]
+  (make (mean x1 x2) (mean y1 y2)))
