@@ -9,7 +9,8 @@
 
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN)
 
-(def center (position/make 500 500))
+(def center   (position/make 500 500))
+(def running? (atom true))
 
 (defstruct controls :magnification :center :trails :clear)
 
@@ -29,10 +30,10 @@
 (defn draw-object [g obj controls]
   (let [mag        (:magnification controls)
         sun-center (:center controls)
-        x-offset   (- (:x center) (* mag (:x sun-center)))
-        y-offset   (- (:y center) (* mag (:y sun-center)))
-        x          (+ x-offset (* mag (:x (:position obj))))
-        y          (+ y-offset (* mag (:y (:position obj))))
+        x-offset   (- (first center) (* mag (first sun-center)))
+        y-offset   (- (last center) (* mag (last sun-center)))
+        x          (+ x-offset (* mag (first (:position obj))))
+        y          (+ y-offset (* mag (last (:position obj))))
         s          (max 2 (* mag (size-by-mass obj)))
         half-s     (/ s 2)
         c          (color-by-mass obj)]
@@ -71,7 +72,7 @@
 
 (defn handle-key [c world controls]
   (condp = c
-    \q     (System/exit 1)
+    \q     (swap! running? not)
     \+     (magnify 1.1 controls world)
     \-     (magnify 0.9 controls world)
     \space (magnify 1.0 controls world)
@@ -85,9 +86,6 @@
         (proxy-super paintComponent g))
       (draw-world g @world @controls)
       (reset-screen-state controls))
-    (actionPerformed [e]
-      (update-world world @controls)
-      (.repaint this))
     (keyPressed [e]
       (handle-key (.getKeyChar e) world controls)
       (.repaint this))
@@ -132,8 +130,7 @@
                         :clear false))
         world (atom (create-world))
         frame (JFrame. "Orbit")
-        panel (world-panel frame world controls)
-        timer (Timer. 1 panel)]
+        panel (world-panel frame world controls)]
     (doto panel
       (.setFocusable true)
       (.addKeyListener panel))
@@ -141,8 +138,14 @@
       (.add panel)
       (.pack)
       (.setVisible true)
-      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
-    (.start timer)))
+      (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
+    (future
+     (while @running?
+       (.repaint panel)
+       (Thread/sleep 40)))
+    (future
+     (while @running?
+            (time (update-world world @controls))))))
 
 (defn run-world []
   (world-frame))
