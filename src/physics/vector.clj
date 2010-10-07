@@ -1,40 +1,35 @@
 (ns physics.vector (:refer-clojure :exclude (vector)))
 
-(defstruct vector :x :y)
-
 (defn zero_mag? [v]
-  (and (zero? (:x v)) (zero? (:y v))))
+  (every? zero? v))
 
 (defn make
-  ([]
-    (struct vector 0 0))
-  ([x y]
-    (struct vector x y)))
+  ([]    [0 0])
+  ([x y] [x y]))
 
 (defn add [v1 v2]
   (make
-    (+ (:x v1) (:x v2))
-    (+ (:y v1) (:y v2))))
+    (+ (first v1) (first v2))
+    (+ (last v1) (last v2))))
 
 (defn subtract [v1 v2]
   (make
-    (- (:x v1) (:x v2))
-    (- (:y v1) (:y v2))))
+   (- (first v1) (first v2))
+   (- (last v1) (last v2))))
 
 (defn scale [v s]
   (make
-    (* (:x v) s)
-    (* (:y v) s)))
+   (* (first v) s)
+   (* (last v) s)))
 
 (defn magnitude [v]
-  (letfn [(square [x] (* x x))]
-    (Math/sqrt
-      (+
-        (square (:x v))
-        (square (:y v))))))
+  (Math/sqrt
+   (+
+    (Math/pow (first v) 2)
+    (Math/pow (last v) 2))))
 
 (defn unit [v]
   (scale v (/ 1 (magnitude v))))
 
-(defn rotate90 [{x :x y :y}]
+(defn rotate90 [[x y]]
   (make (- y) x))
