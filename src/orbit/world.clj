@@ -52,22 +52,22 @@
                            (:magnification controls)) 20 20)))
 
 (defn update-world [world controls]
-  (dosync
-    (alter world #(object/update-all %))))
+  (swap! world object/update-all))
 
 (defn magnify [factor controls world]
   (dosync
     (let [sun-position (:position (find-sun @world))
           new-mag (* factor (:magnification @controls))]
-      (alter controls #(assoc % :magnification new-mag))
-      (alter controls #(assoc % :center sun-position))
-      (alter controls #(assoc % :clear true)))))
+      (swap! controls assoc
+             :magnification new-mag
+             :center        sun-position
+             :clear         true))))
 
 (defn reset-screen-state [controls]
-  (dosync (alter controls #(assoc % :clear false))))
+  (swap! controls assoc :clear false))
 
 (defn toggle-trail [controls]
-  (dosync (alter controls #(assoc % :trails (not (:trails @controls))))))
+  (swap! controls assoc :trails (-> @controls :trails not)))
 
 (defn handle-key [c world controls]
   (condp = c
@@ -75,7 +75,8 @@
     \+     (magnify 1.1 controls world)
     \-     (magnify 0.9 controls world)
     \space (magnify 1.0 controls world)
-    \t     (toggle-trail controls)))
+    \t     (toggle-trail controls)
+    nil))
 
 (defn world-panel [frame world controls]
   (proxy [JPanel ActionListener KeyListener] []
@@ -124,12 +125,12 @@
         (recur (conj world (random-object sun n)) (dec n))))))
 
 (defn world-frame []
-  (let [controls (ref (struct-map controls
+  (let [controls (atom (struct-map controls
                         :magnification 1.0
                         :center center
                         :trails false
                         :clear false))
-        world (ref (create-world))
+        world (atom (create-world))
         frame (JFrame. "Orbit")
         panel (world-panel frame world controls)
         timer (Timer. 1 panel)]
