@@ -1,5 +1,5 @@
-(ns physics)
-(require ['physics.vector :as 'vector])
-(require ['physics.position :as 'position])
-(require ['physics.object :as 'object])
+(ns physics
+  (:require [physics.vector   :as vector]
+            [physics.position :as position]
+            [physics.object   :as object]))
 

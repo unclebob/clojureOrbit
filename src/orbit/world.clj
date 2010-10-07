@@ -2,12 +2,12 @@
   (:import (java.awt Color Dimension)
     (javax.swing JPanel JFrame Timer JOptionPane)
     (java.awt.event ActionListener KeyListener))
-  (:use clojure.contrib.import-static))
+  (:use clojure.contrib.import-static)
+  (:require [physics.object :as 'object]
+            [physics.vector :as 'vector]
+            [physics.position :as 'position]))
 
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN)
-(require ['physics.object :as 'object])
-(require ['physics.vector :as 'vector])
-(require ['physics.position :as 'position])
 
 (def center (position/make 500 500))
 

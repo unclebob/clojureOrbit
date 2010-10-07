@@ -1,10 +1,8 @@
 (ns physics.object
   (:refer-clojure :exclude (merge))
   (:use clojure.contrib.combinatorics)
-  )
-
-(require ['physics.position :as 'position])
-(require ['physics.vector :as 'vector])
+  (:require [physics.position :as position]
+            [physics.vector :as vector]))
 
 (defstruct object :position :mass :velocity :force :name)
 
