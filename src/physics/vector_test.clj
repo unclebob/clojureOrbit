@@ -4,11 +4,11 @@
 
 (deftest vector-test
   (testing "vector creation"
-    (is (= 0 (:x (vector/make))))
-    (is (= 0 (:y (vector/make))))
+    (is (= 0 (first (vector/make))))
+    (is (= 0 (second (vector/make))))
     (is (= (vector/make 1 1) (vector/make 1 1)))
-    (is (= 1 (:x (vector/make 1 0))))
-    (is (= 0 (:y (vector/make 1 0))))
+    (is (= 1 (first (vector/make 1 0))))
+    (is (= 0 (second (vector/make 1 0))))
     )
 
   (testing "vector addition"
