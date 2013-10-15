@@ -51,47 +51,47 @@
                            (count world)
                            (:magnification controls)) 20 20)))
 
-(defn update-world-history [world]
-  (let [new-world (conj world (object/update-all (last world)))]
-    (if (> (count new-world) 200)
+(defn update-world-history [world-history]
+  (let [new-world-history (conj world-history (object/update-all (last world-history)))]
+    (if (> (count new-world-history) 200)
       (let [r (rand-int 100)]
-        (vec (concat (take r new-world) (drop (inc r) new-world))))
-      new-world)))
+        (vec (concat (take r new-world-history) (drop (inc r) new-world-history))))
+      new-world-history)))
 
-(defn update-world [world controls]
-  (swap! world update-world-history))
+(defn update-screen [world-history-atom controls]
+  (swap! world-history-atom update-world-history))
 
-(defn magnify [factor controls world]
+(defn magnify [factor controls world-history-atom]
   (dosync
-    (let [sun-position (:position (find-sun (last @world)))
+    (let [sun-position (:position (find-sun (last @world-history-atom)))
           new-mag (* factor (:magnification @controls))]
       (swap! controls assoc
              :magnification new-mag
              :center sun-position))))
 
-(defn clear-trails [world]
-  (vec (drop (dec (count world)) world)))
+(defn clear-trails [world-history]
+  (vec (drop (dec (count world-history)) world-history)))
 
-(defn handle-key [c world controls]
+(defn handle-key [c world-history-atom controls]
   (condp = c
     \q (System/exit 0)
-    \+ (magnify 1.3 controls world)
-    \- (magnify 0.9 controls world)
-    \_ (magnify 0.7 controls world)
-    \= (magnify 1.1 controls world)
-    \c (magnify 1.0 controls world)
+    \+ (magnify 1.3 controls world-history-atom)
+    \- (magnify 0.9 controls world-history-atom)
+    \_ (magnify 0.7 controls world-history-atom)
+    \= (magnify 1.1 controls world-history-atom)
+    \c (magnify 1.0 controls world-history-atom)
     \space (do
-             (swap! world clear-trails)
-             (magnify 1.0 controls world))
+             (swap! world-history-atom clear-trails)
+             (magnify 1.0 controls world-history-atom))
     nil))
 
-(defn world-panel [frame world controls]
+(defn world-panel [frame world-history-atom controls]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
       (proxy-super paintComponent g)
-      (doseq [w @world] (draw-world g w @controls)))
+      (doseq [w @world-history-atom] (draw-world g w @controls)))
     (keyPressed [e]
-      (handle-key (.getKeyChar e) world controls)
+      (handle-key (.getKeyChar e) world-history-atom controls)
       (.repaint this))
     (getPreferredSize []
       (Dimension. 1000 1000))
@@ -121,7 +121,7 @@
 (defn create-world []
   (let [v0 (vector/make)
         sun (object/make center 150 (vector/make 0 0) v0 "sun")]
-    (loop [world [sun] n 500]
+    (loop [world [sun] n (+ 250 (rand-int 250))]
       (if (zero? n)
         world
         (recur (conj world (random-object sun n)) (dec n))))))
@@ -130,9 +130,9 @@
   (let [controls (atom (struct-map controls
                          :magnification 1.0
                          :center center))
-        world (atom [(create-world)])
+        world-history-atom (atom [(create-world)])
         frame (JFrame. "Orbit")
-        panel (world-panel frame world controls)]
+        panel (world-panel frame world-history-atom controls)]
     (doto panel
       (.setFocusable true)
       (.addKeyListener panel))
@@ -143,7 +143,7 @@
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
       (while true
-        (update-world world @controls)
+        (update-screen world-history-atom @controls)
         (.repaint panel)))))
 
 (defn run-world []
