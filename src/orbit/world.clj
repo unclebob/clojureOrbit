@@ -11,7 +11,7 @@
 
 (def center (position/make 500 500))
 
-(defstruct controls :magnification :center :trails :clear )
+(defstruct controls :magnification :center)
 
 (defn size-by-mass [{m :mass}]
   (+ 0 (Math/sqrt m)))
@@ -48,8 +48,8 @@
       (draw-object g obj controls))
     (.clearRect g 0 0 1000 20)
     (.drawString g (format "Objects: %d, Magnification: %4.3g"
-                     (count world)
-                     (:magnification controls)) 20 20)))
+                           (count world)
+                           (:magnification controls)) 20 20)))
 
 (defn update-world-history [world]
   (let [new-world (conj world (object/update-all (last world)))]
@@ -66,8 +66,8 @@
     (let [sun-position (:position (find-sun (last @world)))
           new-mag (* factor (:magnification @controls))]
       (swap! controls assoc
-        :magnification new-mag
-        :center sun-position))))
+             :magnification new-mag
+             :center sun-position))))
 
 (defn clear-trails [world]
   (vec (drop (dec (count world)) world)))
@@ -129,9 +129,7 @@
 (defn world-frame []
   (let [controls (atom (struct-map controls
                          :magnification 1.0
-                         :center center
-                         :trails false
-                         :clear false))
+                         :center center))
         world (atom [(create-world)])
         frame (JFrame. "Orbit")
         panel (world-panel frame world controls)]
