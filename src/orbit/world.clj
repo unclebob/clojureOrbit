@@ -74,15 +74,15 @@
   (swap! world-history-atom update-world-history))
 
 (defn magnify [factor controls world-history-atom]
-  (dosync
-    (let [sun-position (:position (find-sun (last @world-history-atom)))
-          new-mag (* factor (:magnification @controls))]
-      (swap! controls assoc
-             :magnification new-mag
-             :center sun-position))))
+  (let [sun-position (:position (find-sun (last @world-history-atom)))
+        new-mag (* factor (:magnification @controls))]
+    (swap! controls assoc
+           :magnification new-mag
+           :center sun-position)))
 
 (defn clear-trails [world-history]
   (vec (drop (dec (count world-history)) world-history)))
+
 
 (defn handle-key [c world-history-atom controls]
   (condp = c
