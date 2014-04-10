@@ -1,8 +1,8 @@
 (ns orbit.world
   (:import (java.awt Color Dimension)
            (javax.swing JPanel JFrame Timer JOptionPane)
-           (java.awt.event ActionListener KeyListener))
-  (:use clojure.contrib.import-static)
+           (java.awt.event ActionListener KeyListener MouseListener))
+  (:use clojure.contrib.import-static clojure.pprint)
   (:require [physics.object :as object]
             [physics.vector :as vector]
             [physics.position :as position]))
@@ -26,18 +26,30 @@
     40 Color/blue
     (Color. 255 215 0)))
 
+(defn to-object-coords [screen-coords mag sun-center]
+  (let [x-offset (- (first center) (* mag (first sun-center)))
+        y-offset (- (last center) (* mag (last sun-center)))
+        x (/ (- (first screen-coords) x-offset) mag)
+        y (/ (- (last screen-coords) y-offset) mag)]
+    [x y]))
+
+(defn to-screen-coords [object-coords mag sun-center]
+  (let [x-offset (- (first center) (* mag (first sun-center)))
+        y-offset (- (last center) (* mag (last sun-center)))
+        x (+ x-offset (* mag (first object-coords)))
+        y (+ y-offset (* mag (last object-coords)))]
+    [x y]))
+
 (defn draw-object [g obj controls]
   (let [mag (:magnification controls)
         sun-center (:center controls)
-        x-offset (- (first center) (* mag (first sun-center)))
-        y-offset (- (last center) (* mag (last sun-center)))
-        x (+ x-offset (* mag (first (:position obj))))
-        y (+ y-offset (* mag (last (:position obj))))
+        [x y] (to-screen-coords (:position obj) mag sun-center)
         s (max 2 (* mag (size-by-mass obj)))
         half-s (/ s 2)
         c (color-by-mass obj)]
     (.setColor g c)
     (.fillOval g (- x half-s) (- y half-s) s s)))
+
 
 (defn find-sun [world]
   (first (filter #(not (= -1 (.indexOf (:name %) "sun"))) world)))
@@ -80,13 +92,11 @@
     \_ (magnify 0.7 controls world-history-atom)
     \= (magnify 1.1 controls world-history-atom)
     \c (magnify 1.0 controls world-history-atom)
-    \space (do
-             (swap! world-history-atom clear-trails)
-             (magnify 1.0 controls world-history-atom))
+    \space (magnify 1.0 controls world-history-atom)
     nil))
 
 (defn world-panel [frame world-history-atom controls]
-  (proxy [JPanel ActionListener KeyListener] []
+  (proxy [JPanel ActionListener KeyListener MouseListener] []
     (paintComponent [g]
       (proxy-super paintComponent g)
       (doseq [w @world-history-atom] (draw-world g w @controls)))
@@ -96,7 +106,18 @@
     (getPreferredSize []
       (Dimension. 1000 1000))
     (keyReleased [e])
-    (keyTyped [e])))
+    (keyTyped [e])
+    (mouseEntered [e])
+    (mouseClicked [e])
+    (mouseExited [e])
+    (mousePressed [e]
+      (let [pos [(.getX e) (.getY e)]]
+        (when (nil? (:mouseDown controls))
+          (swap! controls assoc :mouseDown pos :mouseUp nil))))
+    (mouseReleased [e]
+      (let [pos [(.getX e) (.getY e)]]
+        (when (nil? (:mouseUp controls))
+          (swap! controls assoc :mouseUp pos))))))
 
 (defn random-about [n]
   (- (rand (* 2 n)) n))
@@ -126,6 +147,21 @@
         world
         (recur (conj world (random-object sun n)) (dec n))))))
 
+(defn add-object-to-world [obj world-history]
+  (let [last-world (conj (last world-history) obj)
+        history (vec (butlast world-history))]
+    (conj history last-world)))
+
+(defn handle-mouse [world-history-atom controls]
+  (let [down-pos (:mouseDown @controls)
+        up-pos (:mouseUp @controls)
+        mag (:magnification @controls)
+        v (vector/scale (vector/subtract up-pos down-pos) (/ 0.1 mag))
+        pos (to-object-coords down-pos mag (:center @controls))
+        obj (object/make pos 1 v (vector/make) "m")]
+    (swap! world-history-atom #(add-object-to-world obj %))
+    (swap! controls assoc :mouseUp nil :mouseDown nil)))
+
 (defn world-frame []
   (let [controls (atom (struct-map controls
                          :magnification 1.0
@@ -135,7 +171,8 @@
         panel (world-panel frame world-history-atom controls)]
     (doto panel
       (.setFocusable true)
-      (.addKeyListener panel))
+      (.addKeyListener panel)
+      (.addMouseListener panel))
     (doto frame
       (.add panel)
       (.pack)
@@ -144,6 +181,8 @@
     (future
       (while true
         (update-screen world-history-atom @controls)
+        (when (not (nil? (:mouseUp @controls)))
+          (handle-mouse world-history-atom controls))
         (.repaint panel)))))
 
 (defn run-world []
