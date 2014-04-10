@@ -24,16 +24,16 @@
     (vector/scale uv g)))
 
 (defn accumulate-forces
-  ([o os]
-    (assoc o :force (accumulate-forces o os (vector/make))))
-  ([o os f]
+  ([o world]
+    (assoc o :force (accumulate-forces o world (vector/make))))
+  ([o world f]
     (cond
-      (empty? os) f
-      (= o (first os)) (recur o (rest os) f)
-      :else (recur o (rest os) (vector/add f (force-between o (first os)))))))
+      (empty? world) f
+      (= o (first world)) (recur o (rest world) f)
+      :else (recur o (rest world) (vector/add f (force-between o (first world)))))))
 
-(defn calculate-forces-on-all [os]
-  (map #(accumulate-forces % os) os))
+(defn calculate-forces-on-all [world]
+  (map #(accumulate-forces % world) world))
 
 (defn accelerate [o]
   (let [f (:force o)
@@ -42,16 +42,16 @@
         av (vector/add v (vector/scale f (/ 1.0 m)))]
     (assoc o :velocity av)))
 
-(defn accelerate-all [os]
-  (map accelerate os))
+(defn accelerate-all [world]
+  (map accelerate world))
 
 (defn reposition [o]
   (let [p (:position o)
         v (:velocity o)]
     (assoc o :position (position/add p v))))
 
-(defn reposition-all [os]
-  (map reposition os))
+(defn reposition-all [world]
+  (map reposition world))
 
 (defn collided? [o1 o2]
   (let [p1 (:position o1)
@@ -76,13 +76,16 @@
         n   (if (> m1 m2) (str n1 "." n2) (str n2 "." n1))]
     (make p m v f n)))
 
-(defn collide [o1 o2 os]
+(defn remove-obj  [o world]
+  (remove #(= o %) world))
+
+(defn collide [o1 o2 world]
   (conj
-    (->> os (remove #(= o1 %)) (remove #(= o2 %)))
+    (->> world (remove-obj o1) (remove-obj o2))
     (merge o1 o2)))
 
-(defn collide-all [os]
-  (loop [pairs (combinations os 2) cos os]
+(defn collide-all [world]
+  (loop [pairs (combinations world 2) cos world]
     (if (empty? pairs)
       cos
       (let [[o1 o2] (first pairs)]
@@ -90,5 +93,5 @@
           (recur (rest pairs) (collide o1 o2 cos))
           (recur (rest pairs) cos))))))
 
-(defn update-all [os]
-  (-> os collide-all calculate-forces-on-all accelerate-all reposition-all))
+(defn update-all [world]
+  (-> world collide-all calculate-forces-on-all accelerate-all reposition-all))

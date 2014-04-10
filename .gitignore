@@ -3,4 +3,7 @@ classes/*
 lib/*
 .idea/*
 *.jar
+.lein-failures
+*.old
+target
 
