@@ -59,9 +59,12 @@
     (doseq [obj world]
       (draw-object g obj controls))
     (.clearRect g 0 0 1000 20)
-    (.drawString g (format "Objects: %d, Magnification: %4.3g"
+    (.drawString g (format "Objects: %d, Magnification: %4.3g, Delay: %d %s"
                            (count world)
-                           (:magnification controls)) 20 20)))
+                           (:magnification controls)
+                           (:delay controls)
+                           (if (:track-sun controls) "Tracking" ""))
+                 20 20)))
 
 (defn update-world-history [world-history]
   (let [new-world-history (conj world-history (object/update-all (last world-history)))]
@@ -84,6 +87,22 @@
   (vec (drop (dec (count world-history)) world-history)))
 
 
+(defn slow-down [controls]
+  (swap! controls #(update-in % [:delay] inc))
+  )
+
+(defn dec-delay [delay]
+  (if (> delay 0)
+    (dec delay)
+    delay))
+
+(defn speed-up [controls]
+  (swap! controls #(update-in % [:delay] dec-delay))
+  )
+
+(defn track-sun [controls]
+  (swap! controls #(update-in % [:track-sun] not)))
+
 (defn handle-key [c world-history-atom controls]
   (condp = c
     \q (System/exit 0)
@@ -93,6 +112,9 @@
     \= (magnify 1.1 controls world-history-atom)
     \c (magnify 1.0 controls world-history-atom)
     \space (magnify 1.0 controls world-history-atom)
+    \s (slow-down controls)
+    \f (speed-up controls)
+    \t (track-sun controls)
     nil))
 
 (defn world-panel [frame world-history-atom controls]
@@ -111,13 +133,11 @@
     (mouseClicked [e])
     (mouseExited [e])
     (mousePressed [e]
-      (let [pos [(.getX e) (.getY e)]]
-        (when (nil? (:mouseDown controls))
-          (swap! controls assoc :mouseDown pos :mouseUp nil))))
+      (when (nil? (:mouseDown controls))
+        (swap! controls assoc :mouseDown e :mouseUp nil)))
     (mouseReleased [e]
-      (let [pos [(.getX e) (.getY e)]]
-        (when (nil? (:mouseUp controls))
-          (swap! controls assoc :mouseUp pos))))))
+      (when (nil? (:mouseUp controls))
+        (swap! controls assoc :mouseUp e)))))
 
 (defn random-about [n]
   (- (rand (* 2 n)) n))
@@ -153,19 +173,25 @@
     (conj history last-world)))
 
 (defn handle-mouse [world-history-atom controls]
-  (let [down-pos (:mouseDown @controls)
-        up-pos (:mouseUp @controls)
+  (let [down-event (:mouseDown @controls)
+        up-event (:mouseUp @controls)
+        down-pos [(.getX down-event) (.getY down-event)]
+        up-pos [(.getX up-event) (.getY up-event)]
+        duration (- (.getWhen up-event) (.getWhen down-event))
         mag (:magnification @controls)
         v (vector/scale (vector/subtract up-pos down-pos) (/ 0.1 mag))
         pos (to-object-coords down-pos mag (:center @controls))
-        obj (object/make pos 1 v (vector/make) "m")]
+        obj (object/make pos (/ duration 100) v (vector/make) "m")]
+    (println "duration:" duration)
     (swap! world-history-atom #(add-object-to-world obj %))
     (swap! controls assoc :mouseUp nil :mouseDown nil)))
 
 (defn world-frame []
   (let [controls (atom (struct-map controls
                          :magnification 1.0
-                         :center center))
+                         :center center
+                         :delay 0
+                         :track-sun true))
         world-history-atom (atom [(create-world)])
         frame (JFrame. "Orbit")
         panel (world-panel frame world-history-atom controls)]
@@ -180,6 +206,9 @@
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
       (while true
+        (Thread/sleep (* 10 (:delay @controls)))
+        (when (:track-sun @controls)
+          (magnify 1.0 controls world-history-atom))
         (update-screen world-history-atom @controls)
         (when (not (nil? (:mouseUp @controls)))
           (handle-mouse world-history-atom controls))

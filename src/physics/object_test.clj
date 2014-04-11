@@ -8,7 +8,7 @@
     v11 (vector/make 1 1)
     o1 (object/make (position/make 1 1) 2 v0 v0 "o1")
     o2 (object/make (position/make 1 2) 3 v0 v0 "o2")
-    o3 (object/make (position/make 4 5) 4 v0 v0 "o3")
+    o3 (object/make (position/make 10 10) 4 v0 v0 "o3")
     os [o1 o2 o3]
     ]
     (testing "default creation"
@@ -129,9 +129,7 @@
         (is (= (position/make 1 1.4) (:position om)))
         (is (= 5 (:mass om)))
         (is (= (vector/make -1/5 0) (:velocity om)))
-        (is (= (vector/make 2 2) (:force om)))
-        )
-      )
+        (is (= (vector/make 2 2) (:force om)))))
 
     (testing "collide"
       (let [
@@ -139,9 +137,10 @@
         ]
         (is (= 2 (count cos)))
         (is (some #(= (object/merge o1 o2) %) cos))
-        (is (some #(= o3 %) cos))
-        )
-      )
+        (is (some #(= o3 %) cos))))
+
+    (testing "difference-list"
+      (is (= [1 3] (object/difference-list [1 2 3 4] [2 4]))))
 
     (testing "collide-all"
       (let [
@@ -149,9 +148,20 @@
         ]
         (is (= 2 (count cos)))
         (is (some #(= (object/merge o1 o2) %) cos))
-        (is (some #(= o3 %) cos))        
-        )
-      )
+        (is (some #(= o3 %) cos))))
+
+    (testing "close-enough?"
+      (is (object/close-enough? [0 0] [0 0]))
+      (is (object/close-enough? [0 29] [0 0]))
+      (is (object/close-enough? [29 0] [0 0]))
+      (is (object/close-enough? [0 0] [0 29]))
+      (is (object/close-enough? [0 0] [29 0]))
+      (is (object/close-enough? [0 0] [14 14]))
+      (is (not (object/close-enough? [0 0] [0 31])))
+      (is (not (object/close-enough? [0 0] [31 0])))
+      (is (not (object/close-enough? [31 0] [0 0])))
+      (is (not (object/close-enough? [0 31] [0 0])))
+      (is (not (object/close-enough? [0 0] [15 16]))))
     )
   )
 
