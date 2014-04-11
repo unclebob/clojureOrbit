@@ -33,3 +33,6 @@
 
 (defn rotate90 [[x y]]
   (make (- y) x))
+
+(defn equal [[x1 y1] [x2 y2]]
+  (and (== x1 x2) (== y1 y2)))

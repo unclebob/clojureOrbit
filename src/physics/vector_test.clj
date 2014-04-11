@@ -12,7 +12,7 @@
     )
 
   (testing "vector addition"
-    (is (=
+    (is (vector/equal
       (vector/make 2 2)
       (vector/add
         (vector/make 1 1)
@@ -20,7 +20,7 @@
     )
 
   (testing "vector subtraction"
-    (is (=
+    (is (vector/equal
       (vector/make 1 2)
       (vector/subtract
         (vector/make 3 4)
@@ -28,7 +28,7 @@
     )
 
   (testing "vector scaling"
-    (is (=
+    (is (vector/equal
       (vector/make 3 3)
       (vector/scale
         (vector/make 1 1)
@@ -36,17 +36,17 @@
     )
 
   (testing "magnitude"
-    (is (= 3 (vector/magnitude (vector/make 0 3))))
-    (is (= 3 (vector/magnitude (vector/make 3 0))))
-    (is (= 5 (vector/magnitude (vector/make 3 4))))
+    (is (= 3.0 (vector/magnitude (vector/make 0 3))))
+    (is (= 3.0 (vector/magnitude (vector/make 3 0))))
+    (is (= 5.0 (vector/magnitude (vector/make 3 4))))
     )
 
   (testing "unit vector"
-    (is (=
+    (is (vector/equal
       (vector/make 0 1)
       (vector/unit (vector/make 0 99))))
 
-    (is (=
+    (is (vector/equal
       (vector/make 1 0)
       (vector/unit (vector/make 99 0))))
 

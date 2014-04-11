@@ -27,19 +27,19 @@
 
   (testing "distance"
     (is (=
-      1
+      1.0
       (position/distance
         (position/make 0 0)
         (position/make 0 1))))
 
     (is (=
-      1
+      1.0
       (position/distance
         (position/make 1 0)
         (position/make 2 0))))
 
     (is (=
-      5
+      5.0
       (position/distance
         (position/make 0 0)
         (position/make 3 4))))

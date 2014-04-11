@@ -126,18 +126,10 @@
         om (object/merge o1 o2)
         ]
         (is (= "o2.o1" (:name om)))
-        (is (= (position/make 1 1.4) (:position om)))
-        (is (= 5 (:mass om)))
-        (is (= (vector/make -1/5 0) (:velocity om)))
-        (is (= (vector/make 2 2) (:force om)))))
-
-    (testing "collide"
-      (let [
-        cos (object/collide o1 o2 os)
-        ]
-        (is (= 2 (count cos)))
-        (is (some #(= (object/merge o1 o2) %) cos))
-        (is (some #(= o3 %) cos))))
+        (is (vector/equal (position/make 1 1.4) (:position om)))
+        (is (== 5 (:mass om)))
+        (is (vector/equal (vector/make -1/5 0) (:velocity om)))
+        (is (vector/equal (vector/make 2 2) (:force om)))))
 
     (testing "difference-list"
       (is (= [1 3] (object/difference-list [1 2 3 4] [2 4]))))

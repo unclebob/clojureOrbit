@@ -1,13 +1,10 @@
 (ns orbit.world
   (:import (java.awt Color Dimension)
            (javax.swing JPanel JFrame Timer JOptionPane)
-           (java.awt.event ActionListener KeyListener MouseListener))
-  (:use clojure.contrib.import-static clojure.pprint)
+           (java.awt.event ActionListener KeyListener MouseListener KeyEvent))
   (:require [physics.object :as object]
             [physics.vector :as vector]
             [physics.position :as position]))
-
-(import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN)
 
 (def center (position/make 500 500))
 
