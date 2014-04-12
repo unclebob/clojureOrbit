@@ -121,8 +121,7 @@
 
 
 (defn slow-down [controls]
-  (swap! controls #(update-in % [:delay] inc))
-  )
+  (swap! controls #(update-in % [:delay] inc)))
 
 (defn dec-delay [delay]
   (if (> delay 0)
@@ -130,8 +129,7 @@
     delay))
 
 (defn speed-up [controls]
-  (swap! controls #(update-in % [:delay] dec-delay))
-  )
+  (swap! controls #(update-in % [:delay] dec-delay)))
 
 (defn track-sun [controls]
   (swap! controls #(update-in % [:track-sun] not)))
