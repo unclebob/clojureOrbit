@@ -90,15 +90,17 @@
   (reduce #(remove-obj %2 %1) l1 l2))
 
 (defn collide-all [world]
-  (loop [colliding-world world collisions []]
+  (loop [colliding-world world collided-world [] collisions []]
     (if (empty? colliding-world)
-      collisions
+      [collisions collided-world]
       (let [impactor (first colliding-world)
             targets (rest colliding-world)
             colliders (filter #(collided? impactor %) targets)
             merger (reduce merge impactor colliders)
-            survivors (difference-list targets colliders)]
-        (recur survivors (conj collisions merger))))))
+            survivors (difference-list targets colliders)
+            new-collisions (if (empty? colliders) collisions (conj collisions (:position merger)))]
+        (recur survivors (conj collided-world merger) new-collisions)))))
 
 (defn update-all [world]
-  (-> world collide-all calculate-forces-on-all accelerate-all reposition-all))
+  (let [[collisions collided-world] (collide-all world)]
+    [collisions (-> collided-world calculate-forces-on-all accelerate-all reposition-all)]))

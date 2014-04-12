@@ -8,7 +8,7 @@
 
 (def center (position/make 500 500))
 
-(defstruct controls :magnification :center)
+(defstruct controls :magnification :sun-center)
 
 (defn size-by-mass [{m :mass}]
   (+ 0 (Math/sqrt m)))
@@ -37,48 +37,84 @@
         y (+ y-offset (* mag (last object-coords)))]
     [x y]))
 
-(defn draw-object [g obj controls]
-  (let [mag (:magnification controls)
-        sun-center (:center controls)
-        [x y] (to-screen-coords (:position obj) mag sun-center)
+(defn draw-object [g obj mag sun-center]
+  (let [[x y] (to-screen-coords (:position obj) mag sun-center)
         s (max 2 (* mag (size-by-mass obj)))
         half-s (/ s 2)
         c (color-by-mass obj)]
     (.setColor g c)
     (.fillOval g (- x half-s) (- y half-s) s s)))
 
-
-(defn find-sun [world]
-  (first (filter #(not (= -1 (.indexOf (:name %) "sun"))) world)))
-
 (defn draw-world [g world controls]
-  (let [sun (find-sun world)]
-    (doseq [obj world]
-      (draw-object g obj controls))
-    (.clearRect g 0 0 1000 20)
-    (.drawString g (format "Objects: %d, Magnification: %4.3g, Delay: %d %s"
-                           (count world)
-                           (:magnification controls)
-                           (:delay controls)
-                           (if (:track-sun controls) "Tracking" ""))
+  (doseq [obj world]
+    (draw-object g obj (:magnification controls) (:sun-center controls))))
+
+(defn draw-status [g world controls]
+  (doto g
+    (.setColor Color/BLACK)
+    (.clearRect 0 0 1000 20)
+    (.drawString (format "Objects: %d, Magnification: %4.3g, Delay: %d %s"
+                         (count world)
+                         (:magnification controls)
+                         (:delay controls)
+                         (if (:track-sun controls) "Tracking" ""))
                  20 20)))
 
-(defn update-world-history [world-history]
-  (let [new-world-history (conj world-history (object/update-all (last world-history)))]
-    (if (> (count new-world-history) 200)
-      (let [r (rand-int 100)]
-        (vec (concat (take r new-world-history) (drop (inc r) new-world-history))))
-      new-world-history)))
+(defn draw-collision [g [age pos] mag sun-center]
+  (let [[x y] (to-screen-coords pos mag sun-center)
+        size (* 1.5 age)
+        half-size (/ size 2)]
+    (.setColor g Color/RED)
+    (.fillOval g (- x half-size) (- y half-size) size size)))
 
-(defn update-screen [world-history-atom controls]
-  (swap! world-history-atom update-world-history))
+(defn draw-collisions [g controls]
+  (let [mag (:magnification controls)
+        sun-center (:sun-center controls)]
+    (doseq [collision (:collisions controls)]
+      (draw-collision g collision mag sun-center))))
+
+(defn age-collisions [collisions]
+  (let [aged-collisions (map (fn [[age pos]] [(dec age) pos]) collisions)]
+    (filter #(> (first %) 0) aged-collisions)))
+
+(defn draw-world-panel [g world controls-atom]
+  (let [controls @controls-atom]
+    (draw-world g world controls)
+    (draw-collisions g controls)
+    (draw-status g world controls))
+  (swap! controls-atom assoc :collisions (age-collisions (:collisions @controls-atom))))
+
+(defn prune-history [world-history]
+  (if (> (count world-history) 200)
+    (let [r (rand-int 100)]
+      (vec (concat (take r world-history) (drop (inc r) world-history))))
+    world-history))
+
+(defn update-world-history [world-history]
+  (let [[collisions updated-world] (object/update-all (last world-history))
+        new-world-history (conj world-history updated-world)]
+    [collisions (prune-history new-world-history)]))
+
+(defn add-collisions [new-collisions current-collisions]
+  (concat current-collisions (map (fn [p] [10 p]) new-collisions)))
+
+(defn update-screen [world-history-atom controls-atom]
+  (let [[collisions new-world-history] (update-world-history @world-history-atom)]
+    (reset! world-history-atom new-world-history)
+    (swap! controls-atom assoc :collisions (add-collisions collisions (:collisions @controls-atom)))))
+
+(defn is-sun? [o]
+  (not (= -1 (.indexOf (:name o) "sun"))))
+
+(defn find-sun [world]
+  (first (filter is-sun? world)))
 
 (defn magnify [factor controls world-history-atom]
   (let [sun-position (:position (find-sun (last @world-history-atom)))
         new-mag (* factor (:magnification @controls))]
     (swap! controls assoc
            :magnification new-mag
-           :center sun-position)))
+           :sun-center sun-position)))
 
 (defn clear-trails [world-history]
   (vec (drop (dec (count world-history)) world-history)))
@@ -114,13 +150,13 @@
     \t (track-sun controls)
     nil))
 
-(defn world-panel [frame world-history-atom controls]
+(defn world-panel [frame world-history-atom controls-atom]
   (proxy [JPanel ActionListener KeyListener MouseListener] []
     (paintComponent [g]
       (proxy-super paintComponent g)
-      (doseq [w @world-history-atom] (draw-world g w @controls)))
+      (doseq [w @world-history-atom] (draw-world-panel g w controls-atom)))
     (keyPressed [e]
-      (handle-key (.getKeyChar e) world-history-atom controls)
+      (handle-key (.getKeyChar e) world-history-atom controls-atom)
       (.repaint this))
     (getPreferredSize []
       (Dimension. 1000 1000))
@@ -130,11 +166,11 @@
     (mouseClicked [e])
     (mouseExited [e])
     (mousePressed [e]
-      (when (nil? (:mouseDown controls))
-        (swap! controls assoc :mouseDown e :mouseUp nil)))
+      (when (nil? (:mouseDown controls-atom))
+        (swap! controls-atom assoc :mouseDown e :mouseUp nil)))
     (mouseReleased [e]
-      (when (nil? (:mouseUp controls))
-        (swap! controls assoc :mouseUp e)))))
+      (when (nil? (:mouseUp controls-atom))
+        (swap! controls-atom assoc :mouseUp e)))))
 
 (defn random-about [n]
   (- (rand (* 2 n)) n))
@@ -159,7 +195,7 @@
 (defn create-world []
   (let [v0 (vector/make)
         sun (object/make center 150 (vector/make 0 0) v0 "sun")]
-    (loop [world [sun] n (+ 250 (rand-int 250))]
+    (loop [world [sun] n (+ 200 (rand-int 200))]
       (if (zero? n)
         world
         (recur (conj world (random-object sun n)) (dec n))))))
@@ -169,29 +205,30 @@
         history (vec (butlast world-history))]
     (conj history last-world)))
 
-(defn handle-mouse [world-history-atom controls]
-  (let [down-event (:mouseDown @controls)
-        up-event (:mouseUp @controls)
+(defn handle-mouse [world-history-atom controls-atom]
+  (let [down-event (:mouseDown @controls-atom)
+        up-event (:mouseUp @controls-atom)
         down-pos [(.getX down-event) (.getY down-event)]
         up-pos [(.getX up-event) (.getY up-event)]
         duration (- (.getWhen up-event) (.getWhen down-event))
-        mag (:magnification @controls)
+        mag (:magnification @controls-atom)
         v (vector/scale (vector/subtract up-pos down-pos) (/ 0.1 mag))
-        pos (to-object-coords down-pos mag (:center @controls))
+        pos (to-object-coords down-pos mag (:sun-center @controls-atom))
         obj (object/make pos (/ duration 100) v (vector/make) "m")]
     (println "duration:" duration)
     (swap! world-history-atom #(add-object-to-world obj %))
-    (swap! controls assoc :mouseUp nil :mouseDown nil)))
+    (swap! controls-atom assoc :mouseUp nil :mouseDown nil)))
 
 (defn world-frame []
-  (let [controls (atom (struct-map controls
-                         :magnification 1.0
-                         :center center
-                         :delay 0
-                         :track-sun true))
+  (let [controls-atom (atom (struct-map controls
+                              :magnification 1.0
+                              :sun-center center
+                              :delay 0
+                              :track-sun true
+                              :collisions []))
         world-history-atom (atom [(create-world)])
         frame (JFrame. "Orbit")
-        panel (world-panel frame world-history-atom controls)]
+        panel (world-panel frame world-history-atom controls-atom)]
     (doto panel
       (.setFocusable true)
       (.addKeyListener panel)
@@ -203,12 +240,12 @@
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
       (while true
-        (Thread/sleep (* 10 (:delay @controls)))
-        (when (:track-sun @controls)
-          (magnify 1.0 controls world-history-atom))
-        (update-screen world-history-atom @controls)
-        (when (not (nil? (:mouseUp @controls)))
-          (handle-mouse world-history-atom controls))
+        (Thread/sleep (* 10 (:delay @controls-atom)))
+        (when (:track-sun @controls-atom)
+          (magnify 1.0 controls-atom world-history-atom))
+        (update-screen world-history-atom controls-atom)
+        (when (not (nil? (:mouseUp @controls-atom)))
+          (handle-mouse world-history-atom controls-atom))
         (.repaint panel)))))
 
 (defn run-world []

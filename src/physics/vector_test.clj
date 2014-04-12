@@ -1,5 +1,5 @@
-(ns physics 
-  (:require physics.physics)
+(ns vector-test
+  (:require [physics.vector :as vector])
   (:use clojure.test physics.test-utilities))
 
 (deftest vector-test
