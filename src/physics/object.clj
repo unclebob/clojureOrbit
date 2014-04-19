@@ -34,9 +34,8 @@
 (defn calculate-forces-on-all [world]
   (map #(accumulate-forces % world) world))
 
-(defn accelerate [o]
-  (let [f (:force o)
-        m (:mass o)
+(defn accelerate [{f :force :as o}]
+  (let [m (:mass o)
         v (:velocity o)
         av (vector/add v (vector/scale f (/ 1.0 m)))]
     (assoc o :velocity av)))
@@ -44,26 +43,19 @@
 (defn accelerate-all [world]
   (map accelerate world))
 
-(defn reposition [o]
-  (let [p (:position o)
-        v (:velocity o)]
-    (assoc o :position (position/add p v))))
+(defn reposition [{v :velocity p :position :as o}]
+  (assoc o :position (position/add p v)))
 
 (defn reposition-all [world]
   (map reposition world))
 
-(defn close-enough? [[x1 y1] [x2 y2]]
-  (> 30 (+ (Math/abs (- x1 x2)) (Math/abs (- y1 y2)))))
-
 (defn collided? [o1 o2]
   (let [p1 (:position o1)
-        p2 (:position o2)]
-    (if (close-enough? p1 p2)
-      (let [mass (+ (:mass o1) (:mass o2))
-            distance (position/distance p1 p2)
-            radius (Math/sqrt mass)]
-        (>= (max 3 radius) distance))
-      false)))
+        p2 (:position o2)
+        mass (+ (:mass o1) (:mass o2))
+        distance (position/distance p1 p2)
+        radius (Math/sqrt mass)]
+    (>= (max 3 radius) distance)))
 
 (defn center-of-mass [{p1 :position, m1 :mass}
                       {p2 :position, m2 :mass}]

@@ -53,10 +53,11 @@
   (doto g
     (.setColor Color/BLACK)
     (.clearRect 0 0 1000 20)
-    (.drawString (format "Objects: %d, Magnification: %4.3g, Delay: %d %s"
+    (.drawString (format "Objects: %d, Magnification: %4.3g, Delay: %d, Tick:%dms %s"
                          (count world)
                          (:magnification controls)
                          (:delay controls)
+                         (:tick-time controls)
                          (if (:track-sun controls) "Tracking" ""))
                  20 20)))
 
@@ -178,7 +179,7 @@
         sd (position/distance p sp)
         v (Math/sqrt (/ 1 sd))
         direction (vector/rotate90 (vector/unit (vector/subtract p sp)))]
-    (vector/scale direction (+ (rand 0.01) (* v 13.5)))))
+    (vector/scale direction (+ (rand 0.01) (* v 13.5 3)))))
 
 (defn random-position [sun-position]
   (let [r (+ (rand 300) 30)
@@ -192,8 +193,8 @@
 
 (defn create-world []
   (let [v0 (vector/make)
-        sun (object/make center 150 (vector/make 0 0) v0 "sun")]
-    (loop [world [sun] n (+ 200 (rand-int 200))]
+        sun (object/make center 1500 (vector/make 0 0) v0 "sun")]
+    (loop [world [sun] n 300]
       (if (zero? n)
         world
         (recur (conj world (random-object sun n)) (dec n))))))
@@ -210,7 +211,7 @@
         up-pos [(.getX up-event) (.getY up-event)]
         duration (- (.getWhen up-event) (.getWhen down-event))
         mag (:magnification @controls-atom)
-        v (vector/scale (vector/subtract up-pos down-pos) (/ 0.1 mag))
+        v (vector/scale (vector/subtract up-pos down-pos) (/ 0.01 mag))
         pos (to-object-coords down-pos mag (:sun-center @controls-atom))
         obj (object/make pos (/ duration 100) v (vector/make) "m")]
     (println "duration:" duration)
@@ -223,7 +224,8 @@
                               :sun-center center
                               :delay 0
                               :track-sun true
-                              :collisions []))
+                              :collisions []
+                              :tick-time 0))
         world-history-atom (atom [(create-world)])
         frame (JFrame. "Orbit")
         panel (world-panel frame world-history-atom controls-atom)]
@@ -238,13 +240,15 @@
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
       (while true
-        (Thread/sleep (* 10 (:delay @controls-atom)))
-        (when (:track-sun @controls-atom)
-          (magnify 1.0 controls-atom world-history-atom))
-        (update-screen world-history-atom controls-atom)
-        (when (not (nil? (:mouseUp @controls-atom)))
-          (handle-mouse world-history-atom controls-atom))
-        (.repaint panel)))))
+        (let [start-time (System/currentTimeMillis)]
+          (Thread/sleep (* 2 (:delay @controls-atom)))
+          (when (:track-sun @controls-atom)
+            (magnify 1.0 controls-atom world-history-atom))
+          (update-screen world-history-atom controls-atom)
+          (when (not (nil? (:mouseUp @controls-atom)))
+            (handle-mouse world-history-atom controls-atom))
+          (swap! controls-atom assoc :tick-time (- (System/currentTimeMillis) start-time))
+          (.repaint panel))))))
 
 (defn run-world []
   (world-frame))
