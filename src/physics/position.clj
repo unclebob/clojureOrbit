@@ -1,19 +1,21 @@
 (ns physics.position)
 
-(defn origin? [p]
-  (every? zero? p))
+(defrecord position [^double x ^double y])
 
 (defn make
-  ([]    [0 0])
-  ([x y] [x y]))
+  ([]    (position. 0 0))
+  ([x y] (position. x y)))
 
-(defn add [[x1 y1] [x2 y2]]
-  [(+ x1 x2) (+ y1 y2)])
+(defn origin? [p]
+  (and (zero? (:x p)) (zero? (:y p))))
 
-(defn subtract [[x1 y1] [x2 y2]]
-  [(- x1 x2) (- y1 y2)])
+(defn add [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (position. (+ x1 x2) (+ y1 y2)))
 
-(defn distance [[x1 y1] [x2 y2]]
+(defn subtract [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (position. (- x1 x2) (- y1 y2)))
+
+(defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
   (Math/sqrt
    (+
     (Math/pow (- x1 x2) 2)
@@ -22,5 +24,5 @@
 (defn mean [a b]
   (/ (+ a b) 2))
 
-(defn average [[x1 y1] [x2 y2]]
-  (make (mean x1 x2) (mean y1 y2)))
+(defn average [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (position. (mean x1 x2) (mean y1 y2)))

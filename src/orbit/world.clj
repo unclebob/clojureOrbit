@@ -25,17 +25,17 @@
     (Color. 255 215 0)))
 
 (defn to-object-coords [screen-coords mag sun-center]
-  (let [x-offset (- (first center) (* mag (first sun-center)))
-        y-offset (- (last center) (* mag (last sun-center)))
-        x (/ (- (first screen-coords) x-offset) mag)
-        y (/ (- (last screen-coords) y-offset) mag)]
+  (let [x-offset (- (:x center) (* mag (:x sun-center)))
+        y-offset (- (:y center) (* mag (:y sun-center)))
+        x (/ (- (:x screen-coords) x-offset) mag)
+        y (/ (- (:y screen-coords) y-offset) mag)]
     [x y]))
 
 (defn to-screen-coords [object-coords mag sun-center]
-  (let [x-offset (- (first center) (* mag (first sun-center)))
-        y-offset (- (last center) (* mag (last sun-center)))
-        x (+ x-offset (* mag (first object-coords)))
-        y (+ y-offset (* mag (last object-coords)))]
+  (let [x-offset (- (:x center) (* mag (:x sun-center)))
+        y-offset (- (:y center) (* mag (:y sun-center)))
+        x (+ x-offset (* mag (:x object-coords)))
+        y (+ y-offset (* mag (:y object-coords)))]
     [x y]))
 
 (defn draw-object [g obj mag sun-center]
@@ -88,8 +88,8 @@
   (swap! controls-atom assoc :collisions (age-collisions (:collisions @controls-atom))))
 
 (defn prune-history [world-history]
-  (if (> (count world-history) 200)
-    (let [r (rand-int 100)]
+  (if (> (count world-history) 100)
+    (let [r (rand-int 50)]
       (vec (concat (take r world-history) (drop (inc r) world-history))))
     world-history))
 
@@ -196,7 +196,7 @@
 (defn create-world []
   (let [v0 (vector/make)
         sun (object/make center 1500 (vector/make 0 0) v0 "sun")]
-    (loop [world [sun] n 300]
+    (loop [world [sun] n 400]
       (if (zero? n)
         world
         (recur (conj world (random-object sun n)) (dec n))))))
@@ -242,19 +242,18 @@
       (.setVisible true)
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
-      (let [begin-time (System/currentTimeMillis)]
-        (while (> 10000 (- (System/currentTimeMillis) begin-time))
-          (let [start-time (System/currentTimeMillis)]
-            (Thread/sleep (* 2 (:delay @controls-atom)))
-            (when (:track-sun @controls-atom)
-              (magnify 1.0 controls-atom world-history-atom))
-            (update-screen world-history-atom controls-atom)
-            (when (not (nil? (:mouseUp @controls-atom)))
-              (handle-mouse world-history-atom controls-atom))
-            (swap! controls-atom assoc :tick-time (- (System/currentTimeMillis) start-time))
-            (swap! controls-atom assoc :tick (inc (:tick @controls-atom)))
-            (.repaint panel)))
-        ))))
+      (while true
+        (let [start-time (System/currentTimeMillis)]
+          (Thread/sleep (* 2 (:delay @controls-atom)))
+          (when (:track-sun @controls-atom)
+            (magnify 1.0 controls-atom world-history-atom))
+          (update-screen world-history-atom controls-atom)
+          (when (not (nil? (:mouseUp @controls-atom)))
+            (handle-mouse world-history-atom controls-atom))
+          (swap! controls-atom assoc :tick-time (- (System/currentTimeMillis) start-time))
+          (swap! controls-atom assoc :tick (inc (:tick @controls-atom)))
+          (.repaint panel)))
+      )))
 
 (defn run-world []
   (world-frame))

@@ -7,8 +7,8 @@
   (testing "creation"
     (is (position/origin? (position/make)))
     (is (= (position/make 1 1) (position/make 1 1)))
-    (is (= 1 (first (position/make 1 0))))
-    (is (= 0 (second (position/make 1 0))))
+    (is (== 1 (:x (position/make 1 0))))
+    (is (== 0 (:y (position/make 1 0))))
     )
 
   (testing "addition"

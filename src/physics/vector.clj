@@ -1,38 +1,35 @@
-(ns physics.vector (:refer-clojure :exclude (vector)))
+(ns physics.vector
+  (:refer-clojure :exclude (vector))
+  (:require [physics.position :as position])
+  (:import physics.position.position))
 
-(defn zero_mag? [v]
-  (every? zero? v))
 
 (defn make
-  ([]    [0 0])
-  ([x y] [x y]))
+  ([]    (position. 0 0))
+  ([x y] (position. x y)))
 
-(defn add [v1 v2]
-  (make
-    (+ (first v1) (first v2))
-    (+ (last v1) (last v2))))
+(defn zero_mag? [v]
+  (position/origin? v))
 
-(defn subtract [v1 v2]
-  (make
-   (- (first v1) (first v2))
-   (- (last v1) (last v2))))
+(def add position/add)
+(def subtract position/subtract)
 
 (defn scale [v s]
   (make
-   (* (first v) s)
-   (* (last v) s)))
+   (* (:x v) s)
+   (* (:y v) s)))
 
 (defn magnitude [v]
   (Math/sqrt
    (+
-    (Math/pow (first v) 2)
-    (Math/pow (last v) 2))))
+    (Math/pow (:x v) 2)
+    (Math/pow (:y v) 2))))
 
 (defn unit [v]
   (scale v (/ 1 (magnitude v))))
 
-(defn rotate90 [[x y]]
+(defn rotate90 [{x :x y :y}]
   (make (- y) x))
 
-(defn equal [[x1 y1] [x2 y2]]
+(defn equal [{x1 :x y1 :y} {x2 :x y2 :y}]
   (and (== x1 x2) (== y1 y2)))
