@@ -1,3 +1,4 @@
+*.numbers
 *.iml
 classes/*
 lib/*

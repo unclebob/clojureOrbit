@@ -3,13 +3,13 @@
   (:require [physics.position :as position]
             [physics.vector :as vector]))
 
-(defstruct object :position :mass :velocity :force :name)
+(defrecord object [position mass velocity force name])
 
 (defn make
   ([]
-   (struct object (position/make) 0 (vector/make) (vector/make) "TILT"))
+   (object. (position/make) 0 (vector/make) (vector/make) "TILT"))
   ([position mass velocity force name]
-   (struct object position mass velocity force name)))
+   (object. position mass velocity force name)))
 
 (defn gravity [m1 m2 r]
   (/ (* m1 m2) (* r r)))

@@ -53,10 +53,11 @@
   (doto g
     (.setColor Color/BLACK)
     (.clearRect 0 0 1000 20)
-    (.drawString (format "Objects: %d, Magnification: %4.3g, Delay: %d, Tick:%dms %s"
+    (.drawString (format "Objects: %d, Magnification: %4.3g, Delay: %d, Tick: %d, Tick-time:%dms %s"
                          (count world)
                          (:magnification controls)
                          (:delay controls)
+                         (:tick controls)
                          (:tick-time controls)
                          (if (:track-sun controls) "Tracking" ""))
                  20 20)))
@@ -225,7 +226,8 @@
                               :delay 0
                               :track-sun true
                               :collisions []
-                              :tick-time 0))
+                              :tick-time 0
+                              :tick 0))
         world-history-atom (atom [(create-world)])
         frame (JFrame. "Orbit")
         panel (world-panel frame world-history-atom controls-atom)]
@@ -239,16 +241,19 @@
       (.setVisible true)
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE))
     (future
-      (while true
-        (let [start-time (System/currentTimeMillis)]
-          (Thread/sleep (* 2 (:delay @controls-atom)))
-          (when (:track-sun @controls-atom)
-            (magnify 1.0 controls-atom world-history-atom))
-          (update-screen world-history-atom controls-atom)
-          (when (not (nil? (:mouseUp @controls-atom)))
-            (handle-mouse world-history-atom controls-atom))
-          (swap! controls-atom assoc :tick-time (- (System/currentTimeMillis) start-time))
-          (.repaint panel))))))
+      (let [begin-time (System/currentTimeMillis)]
+        (while (> 10000 (- (System/currentTimeMillis) begin-time))
+          (let [start-time (System/currentTimeMillis)]
+            (Thread/sleep (* 2 (:delay @controls-atom)))
+            (when (:track-sun @controls-atom)
+              (magnify 1.0 controls-atom world-history-atom))
+            (update-screen world-history-atom controls-atom)
+            (when (not (nil? (:mouseUp @controls-atom)))
+              (handle-mouse world-history-atom controls-atom))
+            (swap! controls-atom assoc :tick-time (- (System/currentTimeMillis) start-time))
+            (swap! controls-atom assoc :tick (inc (:tick @controls-atom)))
+            (.repaint panel)))
+        ))))
 
 (defn run-world []
   (world-frame))
