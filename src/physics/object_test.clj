@@ -150,19 +150,6 @@
         (is (= 1 (count collisions)))
         (is (= (:position (object/merge o1 o2)) (first collisions)))))
 
-    (testing "close-enough?"
-      (is (object/close-enough? [0 0] [0 0]))
-      (is (object/close-enough? [0 29] [0 0]))
-      (is (object/close-enough? [29 0] [0 0]))
-      (is (object/close-enough? [0 0] [0 29]))
-      (is (object/close-enough? [0 0] [29 0]))
-      (is (object/close-enough? [0 0] [14 14]))
-      (is (not (object/close-enough? [0 0] [0 31])))
-      (is (not (object/close-enough? [0 0] [31 0])))
-      (is (not (object/close-enough? [31 0] [0 0])))
-      (is (not (object/close-enough? [0 31] [0 0])))
-      (is (not (object/close-enough? [0 0] [15 16]))))
-
     (testing "update-all"
       (let [[collisions new-world] (object/update-all world)]
         (is (= 1 (count collisions)))
