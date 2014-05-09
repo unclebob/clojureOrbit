@@ -1,3 +1,4 @@
+.lein-repl-history
 *.numbers
 *.iml
 classes/*

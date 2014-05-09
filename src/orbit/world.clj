@@ -4,7 +4,8 @@
            (java.awt.event ActionListener KeyListener MouseListener KeyEvent))
   (:require [physics.object :as object]
             [physics.vector :as vector]
-            [physics.position :as position]))
+            [physics.position :as position])
+  (:import physics.object.object))
 
 (def center (position/make 500 500))
 

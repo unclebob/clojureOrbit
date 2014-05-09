@@ -2,7 +2,8 @@
   (:use clojure.test physics.test-utilities)
   (:require [physics.vector :as vector]
             [physics.object :as object]
-            [physics.position :as position]))
+            [physics.position :as position])
+  (:import physics.object.object))
 
 (defn world-momentum [world]
   (reduce vector/add (map #(vector/scale (:velocity %) (:mass %)) world)))
@@ -22,7 +23,7 @@
     (testing "default creation"
       (let [o (object/make)]
         (is (position/origin? (:position o)))
-        (is (= 0 (:mass o)))
+        (is (== 0 (:mass o)))
         (is (= v0 (:velocity o)))
         (is (= v0 (:force o)))
         (is (= "TILT" (:name o)))
@@ -37,7 +38,7 @@
             name "name"
             o (object/make pos mass velocity force name)]
         (is (= pos (:position o)))
-        (is (= mass (:mass o)))
+        (is (== mass (:mass o)))
         (is (= velocity (:velocity o)))
         (is (= force (:force o)))
         (is (= name (:name o)))
